@@ -31,12 +31,14 @@ int main(int argc, char* argv[]){
 	SDL_Window* firstWindow = NULL;
 	SDL_Renderer* renderer = NULL;
 
-	SDL_Surface* surface = NULL;
+	SDL_Surface* texte_surf = NULL;
 	SDL_Texture* texture = NULL;
 	SDL_Rect rect = { 0, 0, 0, 0 }; 	// position.x , position.y , largeur , hauteur
 
 	TTF_Font* font = NULL;
-	SDL_Color color = { 255, 255, 255 };
+	SDL_Color color_txt = { 25, 25, 25 };
+	SDL_Color color_bg = { 225, 225, 225 };
+
 
 
 	//Lancement SDL
@@ -55,7 +57,23 @@ int main(int argc, char* argv[]){
 		SDL_ExitWithError("Creating window & renderer failed");
 	}
 
-	font = TTF_OpenFont("../font/arial.ttf", 25);
+	SDL_Rect background;
+	background.x = 0;
+	background.y = 0;
+	background.w = WINDOW_WIDTH;
+	background.h = WINDOW_HEIGHT;
+
+	if(SDL_SetRenderDrawColor(renderer, 225, 225, 225, SDL_ALPHA_OPAQUE) != 0){
+		SDL_ExitWithError("Change color failed");
+	}
+
+	if(SDL_RenderFillRect(renderer, &background) != 0){
+		SDL_ExitWithError("Drawing background failed");
+	}
+
+	SDL_RenderPresent(renderer);
+
+	font = TTF_OpenFont("fonts/arial.ttf", 20);
 
 	if(font == NULL){
 		TTF_CloseFont(font);
@@ -64,20 +82,20 @@ int main(int argc, char* argv[]){
 
 	/*-------------------------------------------------------*/
 	
-	surface = TTF_RenderText_Solid(font, "test test", color);
-	if(surface == NULL){
+	texte_surf = TTF_RenderText_Shaded(font, "test test", color_txt, color_bg);
+	if(texte_surf == NULL){
 		TTF_CloseFont(font);
-		SDL_FreeSurface(surface);
+		SDL_FreeSurface(texte_surf);
 		SDL_ExitWithError("Add surface failed");
 	}
 
-	// Une fois la texture crée, plus besoin de la font
+	// Une fois la surface crée, plus besoin de la font
 	TTF_CloseFont(font);
 
-	texture = SDL_CreateTextureFromSurface(renderer, surface);
+	texture = SDL_CreateTextureFromSurface(renderer, texte_surf);
 
 	// Une fois la texture crée, plus besoin de la surface
-	SDL_FreeSurface(surface);
+	SDL_FreeSurface(texte_surf);
 
 	if(texture == NULL){
 		SDL_ExitWithError("Add texture failed");
@@ -87,16 +105,15 @@ int main(int argc, char* argv[]){
 		SDL_ExitWithError("texture loading failed");
 	}
 
-	rect.x = (WINDOW_WIDTH - rect.w) / 2;
+	rect.x = WINDOW_WIDTH * 0.05;
 
 	if(SDL_RenderCopy(renderer, texture, NULL, &rect) != 0){
 		SDL_ExitWithError("print message failed");
 	}
 
-	/*-------------------------------------------------------*/
-
 	SDL_RenderPresent(renderer);
-	SDL_Delay(5000);
+
+	/*-------------------------------------------------------*/
 
 	
 	SDL_bool run = SDL_TRUE;	// Struct booleenne True/False
@@ -128,7 +145,7 @@ int main(int argc, char* argv[]){
 
 	/*-------------------------------------------------------*/
 	SDL_DestroyTexture(texture);
-	SDL_FreeSurface(surface);
+	SDL_FreeSurface(texte_surf);
 	TTF_Quit();
 
 	SDL_DestroyRenderer(renderer);

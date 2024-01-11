@@ -10,9 +10,10 @@
 
 
 
-// erreur lors de l'importation de la font !!!
+// Seg fault lors du lancement du programme !
+// line 67
 
-// ligne 56
+
 
 
 
@@ -145,7 +146,6 @@ int main(int argc, char* argv[]){
 
 	/*-------------------------------------------------------*/
 	SDL_DestroyTexture(texture);
-	SDL_FreeSurface(texte_surf);
 	TTF_Quit();
 
 	SDL_DestroyRenderer(renderer);

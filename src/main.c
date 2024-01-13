@@ -1,6 +1,7 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <stdio.h>
+#include <stdarg.h>
 #define WINDOW_WIDTH 1080
 #define WINDOW_HEIGHT 720
 
@@ -10,7 +11,7 @@
 
 // Windows :   gcc src/main.c -o bin/main -I include -L lib -lmingw32 -lSDL2main -lSDL2 -lSDL2_ttf
 
-void SDL_ExitWithError(const char* message);
+void SDL_ExitWithError(const char* message, ...);
 
 int main(int argc, char* argv[]){
 
@@ -66,6 +67,10 @@ int main(int argc, char* argv[]){
 		SDL_ExitWithError("Add font failed");
 	}
 
+	SDL_RWops *io = SDL_RWFromFile("files/test.txt", "w+");
+	if (io == NULL) {
+		SDL_ExitWithError("File not found", io);
+	}
 
 	
 	SDL_bool run = SDL_TRUE;	// Struct booleenne True/False
@@ -79,6 +84,14 @@ int main(int argc, char* argv[]){
 
 				case SDL_KEYDOWN:
 					switch(event.key.keysym.sym){
+						case SDLK_c :
+						char c = 'c';
+						// 	SDL_WriteTxt('c', renderer, texte_surf, texture, rect, font, color_txt, color_bg);
+						
+						if(SDL_RWwrite(io, &c, sizeof(c), 1) != 1){
+								SDL_ExitWithError("char not writed in file");
+						}
+						SDL_Log("File updated");
 
 						default:
 							continue;
@@ -96,6 +109,7 @@ int main(int argc, char* argv[]){
 	}
 
 	/*-------------------------------------------------------*/
+	SDL_RWclose(io);
 	TTF_CloseFont(font);
 	SDL_DestroyTexture(texture);
 	TTF_Quit();
@@ -106,8 +120,20 @@ int main(int argc, char* argv[]){
 	return EXIT_SUCCESS;
 }
 
-void SDL_ExitWithError(const char* message){
+void SDL_ExitWithError(const char* message, ...){
+
 	SDL_Log("Error %s > %s\n", message, SDL_GetError());
+	
+	va_list ap;
+	va_start(ap, message);
+	
+	SDL_RWops* io = va_arg(ap, SDL_RWops*);
+
+	if(io != NULL){
+		SDL_RWclose(io);
+	}
+	va_end(ap);
+
 	TTF_Quit();
 	SDL_Quit();
 	exit(EXIT_FAILURE);

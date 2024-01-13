@@ -6,6 +6,11 @@
 #define WINDOW_HEIGHT 720
 
 
+//erreur lors de l'écriture : après le premier charactère le programme se stop
+// line 91 & 138
+
+
+
 
 // rappel de compilation
 
@@ -83,22 +88,13 @@ int main(int argc, char* argv[]){
 			switch(event.type){
 
 				case SDL_KEYDOWN:
-					switch(event.key.keysym.sym){
-						case SDLK_c :
-						char c = 'c';
-						// 	SDL_WriteTxt('c', renderer, texte_surf, texture, rect, font, color_txt, color_bg);
-						
-						if(SDL_RWwrite(io, &c, sizeof(c), 1) != 1){
-								SDL_ExitWithError("char not writed in file");
-						}
-						SDL_Log("File updated");
-
-						default:
-							continue;
-					}
+					writeCharInFile(io, SDL_GetKeyName(event.key.keysym.sym));
+					SDL_Log("File updated");
 
 				//termine le programme la si fenêtre est fermé
 				case SDL_QUIT:
+					SDL_ClearError();
+					SDL_Log("SDL successfully exited");
 					run = SDL_FALSE;
 					break;
 
@@ -137,4 +133,10 @@ void SDL_ExitWithError(const char* message, ...){
 	TTF_Quit();
 	SDL_Quit();
 	exit(EXIT_FAILURE);
+}
+
+void writeCharInFile(SDL_RWops* io,const char* character){
+	if(SDL_RWwrite(io, character, sizeof(*character), 1) != 1){
+		SDL_ExitWithError("char not writed in file");
+	}
 }

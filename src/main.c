@@ -6,21 +6,6 @@
 
 
 
-
-
-
-
-// Seg fault lors du lancement du programme !
-// line 67
-
-
-
-
-
-
-
-
-
 // rappel de compilation
 
 // Windows :   gcc src/main.c -o bin/main -I include -L lib -lmingw32 -lSDL2main -lSDL2 -lSDL2_ttf
@@ -81,40 +66,6 @@ int main(int argc, char* argv[]){
 		SDL_ExitWithError("Add font failed");
 	}
 
-	/*-------------------------------------------------------*/
-	
-	texte_surf = TTF_RenderText_Shaded(font, "test test", color_txt, color_bg);
-	if(texte_surf == NULL){
-		TTF_CloseFont(font);
-		SDL_FreeSurface(texte_surf);
-		SDL_ExitWithError("Add surface failed");
-	}
-
-	// Une fois la surface crée, plus besoin de la font
-	TTF_CloseFont(font);
-
-	texture = SDL_CreateTextureFromSurface(renderer, texte_surf);
-
-	// Une fois la texture crée, plus besoin de la surface
-	SDL_FreeSurface(texte_surf);
-
-	if(texture == NULL){
-		SDL_ExitWithError("Add texture failed");
-	}
-
-	if(SDL_QueryTexture(texture, NULL, NULL, &rect.w, &rect.h)){
-		SDL_ExitWithError("texture loading failed");
-	}
-
-	rect.x = WINDOW_WIDTH * 0.05;
-
-	if(SDL_RenderCopy(renderer, texture, NULL, &rect) != 0){
-		SDL_ExitWithError("print message failed");
-	}
-
-	SDL_RenderPresent(renderer);
-
-	/*-------------------------------------------------------*/
 
 	
 	SDL_bool run = SDL_TRUE;	// Struct booleenne True/False
@@ -145,6 +96,7 @@ int main(int argc, char* argv[]){
 	}
 
 	/*-------------------------------------------------------*/
+	TTF_CloseFont(font);
 	SDL_DestroyTexture(texture);
 	TTF_Quit();
 

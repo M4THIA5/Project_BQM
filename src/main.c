@@ -22,11 +22,10 @@ const SDL_KeyCode ACTION [] = {SDLK_DELETE, SDLK_KP_ENTER, SDLK_UP, SDLK_DOWN, S
 
 
 
+// Erreurs :
 
-
-
-// Les symboles ne n'affiches pas !! 
-// line 137
+// Les symboles en dessous des chiffres ne n'affiches pas !! 
+// line 139
 
 
 
@@ -36,7 +35,7 @@ const SDL_KeyCode ACTION [] = {SDLK_DELETE, SDLK_KP_ENTER, SDLK_UP, SDLK_DOWN, S
 // rappel de compilation
 
 // Windows :   gcc src/main.c -o bin/main -I include -L lib -lmingw32 -lSDL2main -lSDL2 -lSDL2_ttf
-
+			// bin/main.exe
 
 // Fonctions 
 void SDL_ExitWithError(const char* message, ...);
@@ -44,6 +43,7 @@ void SDL_ExitWithError(const char* message, ...);
 void SDL_WriteCharInFile(SDL_RWops* io,const char* character);
 
 void SDL_SelectCharAction(SDL_RWops* io,const char* action);
+
 
 int main(int argc, char* argv[]){
 
@@ -92,14 +92,14 @@ int main(int argc, char* argv[]){
 
 	SDL_RenderPresent(renderer);
 
-	font = TTF_OpenFont("fonts/arial.ttf", 20);
+	font = TTF_OpenFont("..\\fonts\\arial.ttf", 20);
 
 	if(font == NULL){
 		TTF_CloseFont(font);
 		SDL_ExitWithError("Add font failed");
 	}
 
-	SDL_RWops *io = SDL_RWFromFile("files/test.txt", "w+");
+	SDL_RWops *io = SDL_RWFromFile("..\\files\\test.txt", "w+");
 	if (io == NULL) {
 		SDL_ExitWithError("File not found", io);
 	}
@@ -175,7 +175,7 @@ int main(int argc, char* argv[]){
 
 	/*-------------------------------------------------------*/
 	SDL_RWclose(io);
-	TTF_CloseFont(font);
+	//TTF_CloseFont(font);
 	SDL_DestroyTexture(texture);
 	TTF_Quit();
 

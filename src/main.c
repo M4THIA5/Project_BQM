@@ -2,8 +2,12 @@
 #include <SDL_ttf.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <ctype.h>
 #define WINDOW_WIDTH 1080
 #define WINDOW_HEIGHT 720
+const SDL_Keycode ALPHABET []={SDLK_a, SDLK_b, SDLK_c, SDLK_d, SDLK_e, SDLK_f, SDLK_g, SDLK_h, SDLK_i,
+						SDLK_j, SDLK_k, SDLK_l, SDLK_m, SDLK_n, SDLK_o, SDLK_p, SDLK_q, SDLK_r,
+						SDLK_s, SDLK_t, SDLK_u, SDLK_v, SDLK_w, SDLK_x, SDLK_y, SDLK_z}; 
 
 
 //erreur lors de l'écriture : après le premier charactère le programme se stop
@@ -17,6 +21,8 @@
 // Windows :   gcc src/main.c -o bin/main -I include -L lib -lmingw32 -lSDL2main -lSDL2 -lSDL2_ttf
 
 void SDL_ExitWithError(const char* message, ...);
+
+void writeCharInFile(SDL_RWops* io,const char* character);
 
 int main(int argc, char* argv[]){
 
@@ -88,13 +94,22 @@ int main(int argc, char* argv[]){
 			switch(event.type){
 
 				case SDL_KEYDOWN:
-					writeCharInFile(io, SDL_GetKeyName(event.key.keysym.sym));
-					SDL_Log("File updated");
+					for(int i=0; i<sizeof(ALPHABET); i++){
+						if(event.key.keysym.sym == ALPHABET[i]){
+							char pressedChar = event.key.keysym.mod & KMOD_SHIFT ? 
+                                               SDL_GetKeyName(event.key.keysym.sym)[0] :
+                                               tolower(SDL_GetKeyName(event.key.keysym.sym)[0]);
+							writeCharInFile(io, &pressedChar);
+							SDL_Log("File updated");
+							break; // Sort de la boucle 
+						}
+					}
+					
+					
+					break;
 
 				//termine le programme la si fenêtre est fermé
 				case SDL_QUIT:
-					SDL_ClearError();
-					SDL_Log("SDL successfully exited");
 					run = SDL_FALSE;
 					break;
 
@@ -112,6 +127,8 @@ int main(int argc, char* argv[]){
 
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(firstWindow);
+	SDL_ClearError();
+	SDL_Log("SDL successfully exited");
 	SDL_Quit();
 	return EXIT_SUCCESS;
 }
@@ -136,7 +153,8 @@ void SDL_ExitWithError(const char* message, ...){
 }
 
 void writeCharInFile(SDL_RWops* io,const char* character){
-	if(SDL_RWwrite(io, character, sizeof(*character), 1) != 1){
-		SDL_ExitWithError("char not writed in file");
-	}
+	size_t len = strlen(character);
+    if (SDL_RWwrite(io, character, 1, len) != len) {
+        SDL_ExitWithError("string not written in file", io);
+    }
 }

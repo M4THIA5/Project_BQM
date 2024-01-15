@@ -5,13 +5,29 @@
 #include <ctype.h>
 #define WINDOW_WIDTH 1080
 #define WINDOW_HEIGHT 720
-const SDL_Keycode ALPHABET []={SDLK_a, SDLK_b, SDLK_c, SDLK_d, SDLK_e, SDLK_f, SDLK_g, SDLK_h, SDLK_i,
+const SDL_Keycode ALPHABET [] = {SDLK_a, SDLK_b, SDLK_c, SDLK_d, SDLK_e, SDLK_f, SDLK_g, SDLK_h, SDLK_i,
 						SDLK_j, SDLK_k, SDLK_l, SDLK_m, SDLK_n, SDLK_o, SDLK_p, SDLK_q, SDLK_r,
-						SDLK_s, SDLK_t, SDLK_u, SDLK_v, SDLK_w, SDLK_x, SDLK_y, SDLK_z}; 
+						SDLK_s, SDLK_t, SDLK_u, SDLK_v, SDLK_w, SDLK_x, SDLK_y, SDLK_z};
+const SDL_KeyCode ZERO_TO_NINE [] = {SDLK_0, SDLK_1, SDLK_2, SDLK_3, SDLK_4, SDLK_5, SDLK_6, SDLK_7, SDLK_8, SDLK_9,
+						SDLK_KP_0, SDLK_KP_1, SDLK_KP_2, SDLK_KP_3, SDLK_KP_4, SDLK_KP_5, SDLK_KP_6, SDLK_KP_7, SDLK_KP_8, SDLK_KP_9};
+
+const SDL_KeyCode SYMBOLS [] = {SDLK_EXCLAIM, SDLK_QUOTE, SDLK_QUOTEDBL, SDLK_HASH, SDLK_DOLLAR, SDLK_COLON,
+						SDLK_SEMICOLON, SDLK_LESS, SDLK_EQUALS, SDLK_GREATER, SDLK_QUESTION, SDLK_AT, SDLK_LEFTBRACKET,
+						SDLK_BACKSLASH, SDLK_RIGHTBRACKET, SDLK_CARET, SDLK_UNDERSCORE, SDLK_BACKQUOTE, SDLK_AMPERSAND, 
+						SDLK_LEFTPAREN, SDLK_RIGHTPAREN, SDLK_ASTERISK, SDLK_PLUS, SDLK_COMMA, SDLK_MINUS, SDLK_PERIOD,
+						SDLK_SLASH, SDLK_KP_PERIOD, SDLK_KP_DIVIDE, SDLK_KP_MINUS, SDLK_KP_MULTIPLY, SDLK_KP_PLUS, SDLK_KP_EQUALS};
+const SDL_KeyCode ACTION [] = {SDLK_BACKSPACE, SDLK_TAB, SDLK_DELETE, SDLK_KP_ENTER, SDLK_UP, SDLK_DOWN, SDLK_RIGHT, SDLK_LEFT};
 
 
-//erreur lors de l'écriture : après le premier charactère le programme se stop
-// line 91 & 138
+
+
+
+
+
+// Les symboles ne n'affiches pas !! 
+// line 137
+
+
 
 
 
@@ -20,9 +36,13 @@ const SDL_Keycode ALPHABET []={SDLK_a, SDLK_b, SDLK_c, SDLK_d, SDLK_e, SDLK_f, S
 
 // Windows :   gcc src/main.c -o bin/main -I include -L lib -lmingw32 -lSDL2main -lSDL2 -lSDL2_ttf
 
+
+// Fonctions 
 void SDL_ExitWithError(const char* message, ...);
 
-void writeCharInFile(SDL_RWops* io,const char* character);
+void SDL_WriteCharInFile(SDL_RWops* io,const char* character);
+
+void SDL_SelectCharAction(SDL_RWops* io,const char* action);
 
 int main(int argc, char* argv[]){
 
@@ -94,18 +114,47 @@ int main(int argc, char* argv[]){
 			switch(event.type){
 
 				case SDL_KEYDOWN:
+					char pressedChar = event.key.keysym.sym;
+					SDL_bool valideChar = SDL_FALSE;
 					for(int i=0; i<sizeof(ALPHABET); i++){
-						if(event.key.keysym.sym == ALPHABET[i]){
-							char pressedChar = event.key.keysym.mod & KMOD_SHIFT ? 
-                                               SDL_GetKeyName(event.key.keysym.sym)[0] :
-                                               tolower(SDL_GetKeyName(event.key.keysym.sym)[0]);
-							writeCharInFile(io, &pressedChar);
-							SDL_Log("File updated");
+						if(pressedChar == ALPHABET[i]){
+							pressedChar = event.key.keysym.mod & KMOD_SHIFT ? 
+                                               SDL_GetKeyName(pressedChar)[0] :
+                                               tolower(SDL_GetKeyName(pressedChar)[0]);
+							valideChar = SDL_TRUE;
 							break; // Sort de la boucle 
 						}
 					}
-					
-					
+
+					for(int i=0; i<sizeof(ZERO_TO_NINE); i++){
+						if(pressedChar == ZERO_TO_NINE[i]){
+							pressedChar = SDL_GetKeyName(pressedChar)[0];
+							valideChar = SDL_TRUE;
+							break; // Sort de la boucle 
+						}
+					}
+
+					for(int i=0; i<sizeof(SYMBOLS); i++){
+						if(pressedChar == SYMBOLS[i]){
+							pressedChar = SDL_GetKeyName(pressedChar)[0];
+							valideChar = SDL_TRUE;
+							break; // Sort de la boucle 
+						}
+					}
+
+					for(int i=0; i<sizeof(ACTION); i++){
+						if(pressedChar == SYMBOLS[i]){
+							pressedChar = SDL_GetKeyName(pressedChar)[0];
+							//pas de valideChar ici
+							break; // Sort de la boucle 
+						}
+					}
+
+					if(valideChar){
+						SDL_WriteCharInFile(io, &pressedChar);
+						SDL_Log("File updated");
+					}
+
 					break;
 
 				//termine le programme la si fenêtre est fermé
@@ -152,9 +201,18 @@ void SDL_ExitWithError(const char* message, ...){
 	exit(EXIT_FAILURE);
 }
 
-void writeCharInFile(SDL_RWops* io,const char* character){
+void SDL_WriteCharInFile(SDL_RWops* io,const char* character){
 	size_t len = strlen(character);
     if (SDL_RWwrite(io, character, 1, len) != len) {
         SDL_ExitWithError("string not written in file", io);
     }
+}
+
+void SDL_SelectCharAction(SDL_RWops* io,const char* action){
+	switch(*action){
+		// case ACTION[0]:
+			// fonction qui fait l'action voulu dans le fichier
+		default:
+			break;
+	}
 }

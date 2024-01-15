@@ -8,15 +8,16 @@
 const SDL_Keycode ALPHABET [] = {SDLK_a, SDLK_b, SDLK_c, SDLK_d, SDLK_e, SDLK_f, SDLK_g, SDLK_h, SDLK_i,
 						SDLK_j, SDLK_k, SDLK_l, SDLK_m, SDLK_n, SDLK_o, SDLK_p, SDLK_q, SDLK_r,
 						SDLK_s, SDLK_t, SDLK_u, SDLK_v, SDLK_w, SDLK_x, SDLK_y, SDLK_z};
-const SDL_KeyCode ZERO_TO_NINE [] = {SDLK_0, SDLK_1, SDLK_2, SDLK_3, SDLK_4, SDLK_5, SDLK_6, SDLK_7, SDLK_8, SDLK_9,
-						SDLK_KP_0, SDLK_KP_1, SDLK_KP_2, SDLK_KP_3, SDLK_KP_4, SDLK_KP_5, SDLK_KP_6, SDLK_KP_7, SDLK_KP_8, SDLK_KP_9};
+const SDL_KeyCode ZERO_TO_NINE [] = {SDLK_0, SDLK_1, SDLK_2, SDLK_3, SDLK_4, SDLK_5, SDLK_6, SDLK_7, SDLK_8, SDLK_9,};
+							// SDLK_KP_0, SDLK_KP_1, SDLK_KP_2, SDLK_KP_3, SDLK_KP_4, SDLK_KP_5, SDLK_KP_6, SDLK_KP_7, SDLK_KP_8, SDLK_KP_9
 
 const SDL_KeyCode SYMBOLS [] = {SDLK_EXCLAIM, SDLK_QUOTE, SDLK_QUOTEDBL, SDLK_HASH, SDLK_DOLLAR, SDLK_COLON,
 						SDLK_SEMICOLON, SDLK_LESS, SDLK_EQUALS, SDLK_GREATER, SDLK_QUESTION, SDLK_AT, SDLK_LEFTBRACKET,
 						SDLK_BACKSLASH, SDLK_RIGHTBRACKET, SDLK_CARET, SDLK_UNDERSCORE, SDLK_BACKQUOTE, SDLK_AMPERSAND, 
 						SDLK_LEFTPAREN, SDLK_RIGHTPAREN, SDLK_ASTERISK, SDLK_PLUS, SDLK_COMMA, SDLK_MINUS, SDLK_PERIOD,
-						SDLK_SLASH, SDLK_KP_PERIOD, SDLK_KP_DIVIDE, SDLK_KP_MINUS, SDLK_KP_MULTIPLY, SDLK_KP_PLUS, SDLK_KP_EQUALS};
-const SDL_KeyCode ACTION [] = {SDLK_BACKSPACE, SDLK_TAB, SDLK_DELETE, SDLK_KP_ENTER, SDLK_UP, SDLK_DOWN, SDLK_RIGHT, SDLK_LEFT};
+						SDLK_SLASH, SDLK_KP_PERIOD, SDLK_KP_DIVIDE, SDLK_KP_MINUS, SDLK_KP_MULTIPLY, SDLK_KP_PLUS, 
+						SDLK_KP_EQUALS, SDLK_SPACE, SDLK_BACKSPACE, SDLK_TAB,};
+const SDL_KeyCode ACTION [] = {SDLK_DELETE, SDLK_KP_ENTER, SDLK_UP, SDLK_DOWN, SDLK_RIGHT, SDLK_LEFT};
 
 
 
@@ -114,42 +115,46 @@ int main(int argc, char* argv[]){
 			switch(event.type){
 
 				case SDL_KEYDOWN:
-					char pressedChar = event.key.keysym.sym;
+					char pressedChar;
 					SDL_bool valideChar = SDL_FALSE;
-					for(int i=0; i<sizeof(ALPHABET); i++){
-						if(pressedChar == ALPHABET[i]){
+					for(int i = 0; i < sizeof(ALPHABET)/4 ; i++){	// = 26 soit le nb de lettres
+						if(event.key.keysym.sym == ALPHABET[i]){
 							pressedChar = event.key.keysym.mod & KMOD_SHIFT ? 
-                                               SDL_GetKeyName(pressedChar)[0] :
-                                               tolower(SDL_GetKeyName(pressedChar)[0]);
+                                               toupper(event.key.keysym.sym) : event.key.keysym.sym;
 							valideChar = SDL_TRUE;
 							break; // Sort de la boucle 
 						}
 					}
 
-					for(int i=0; i<sizeof(ZERO_TO_NINE); i++){
-						if(pressedChar == ZERO_TO_NINE[i]){
-							pressedChar = SDL_GetKeyName(pressedChar)[0];
-							valideChar = SDL_TRUE;
-							break; // Sort de la boucle 
+					if( !(event.key.keysym.mod & KMOD_SHIFT) & valideChar == SDL_FALSE){
+						for(int i=0; i<sizeof(ZERO_TO_NINE)/4; i++){
+							if(event.key.keysym.sym == ZERO_TO_NINE[i]){
+								pressedChar = event.key.keysym.sym;
+								valideChar = SDL_TRUE;
+								break; // Sort de la boucle 
+							}
 						}
 					}
-
-					for(int i=0; i<sizeof(SYMBOLS); i++){
-						if(pressedChar == SYMBOLS[i]){
-							pressedChar = SDL_GetKeyName(pressedChar)[0];
-							valideChar = SDL_TRUE;
-							break; // Sort de la boucle 
+						
+					if( valideChar == SDL_FALSE){
+						for(int i=0; i<sizeof(SYMBOLS)/4; i++){
+							if(event.key.keysym.sym == SYMBOLS[i]){
+								pressedChar = event.key.keysym.sym;
+								valideChar = SDL_TRUE;
+								break; // Sort de la boucle 
+							}
 						}
 					}
+					
 
-					for(int i=0; i<sizeof(ACTION); i++){
-						if(pressedChar == SYMBOLS[i]){
-							pressedChar = SDL_GetKeyName(pressedChar)[0];
+					for(int i=0; i<sizeof(ACTION)/4; i++){
+						if(event.key.keysym.sym == ACTION[i]){
+							pressedChar = event.key.keysym.sym;
 							//pas de valideChar ici
-							break; // Sort de la boucle 
+							break; // Sort de la boucle
 						}
 					}
-
+					SDL_Log("%d -> %c.", event.key.keysym.sym, event.key.keysym.sym);
 					if(valideChar){
 						SDL_WriteCharInFile(io, &pressedChar);
 						SDL_Log("File updated");

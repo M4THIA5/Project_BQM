@@ -1,6 +1,8 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #include <ctype.h>
 #define WINDOW_WIDTH 1080
@@ -55,7 +57,7 @@ int main(int argc, char* argv[]){
 	SDL_Rect rect = { 0, 0, 0, 0 }; 	// position.x , position.y , largeur , hauteur
 
 	TTF_Font* font = NULL;
-	SDL_Color color_txt = { 25, 25, 25 };
+	SDL_Color color_txt = { 0, 0, 0 };
 	SDL_Color color_bg = { 225, 225, 225 };
 
 
@@ -92,14 +94,14 @@ int main(int argc, char* argv[]){
 
 	SDL_RenderPresent(renderer);
 
-	font = TTF_OpenFont("..\\fonts\\arial.ttf", 20);
+	font = TTF_OpenFont("fonts\\arial.ttf", 20);
 
 	if(font == NULL){
 		TTF_CloseFont(font);
 		SDL_ExitWithError("Add font failed");
 	}
 
-	SDL_RWops *io = SDL_RWFromFile("..\\files\\test.txt", "w+");
+	SDL_RWops *io = SDL_RWFromFile("files\\test.txt", "w+");
 	if (io == NULL) {
 		SDL_ExitWithError("File not found", io);
 	}
@@ -120,7 +122,7 @@ int main(int argc, char* argv[]){
 					for(int i = 0; i < sizeof(ALPHABET)/4 ; i++){	// = 26 soit le nb de lettres
 						if(event.key.keysym.sym == ALPHABET[i]){
 							pressedChar = event.key.keysym.mod & KMOD_SHIFT ? 
-                                               toupper(event.key.keysym.sym) : event.key.keysym.sym;
+                                toupper(event.key.keysym.sym) : event.key.keysym.sym;
 							valideChar = SDL_TRUE;
 							break; // Sort de la boucle 
 						}
@@ -156,6 +158,31 @@ int main(int argc, char* argv[]){
 					}
 					SDL_Log("%d -> %c.", event.key.keysym.sym, event.key.keysym.sym);
 					if(valideChar){
+						// affichage du caractère
+						SDL_Surface * gc = TTF_RenderText_Blended(font, &pressedChar, color_txt);
+						if (gc == NULL) {
+							SDL_FreeSurface(gc);
+							TTF_CloseFont(font);
+							SDL_ExitWithError("Creating surface failed");
+						}
+						texture = SDL_CreateTextureFromSurface(renderer, gc);
+						if (texture == NULL) {
+							SDL_FreeSurface(gc);
+							TTF_CloseFont(font);
+							SDL_ExitWithError("Creating texture failed");
+						}
+						//Ecrire les lettres cote à cote
+						SDL_QueryTexture(texture, NULL, NULL, 0, 0);
+						rect.x += rect.w;
+						rect.w = gc->w;
+						rect.h = gc->h;
+						SDL_RenderCopy(renderer, texture, NULL, &rect);
+						SDL_RenderPresent(renderer);
+						
+						SDL_Delay(10);
+
+
+
 						SDL_WriteCharInFile(io, &pressedChar);
 						SDL_Log("File updated");
 					}

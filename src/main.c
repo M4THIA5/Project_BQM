@@ -1,10 +1,12 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
 #define WINDOW_WIDTH 1080
 #define WINDOW_HEIGHT 720
+
 const SDL_Keycode ALPHABET [] = {SDLK_a, SDLK_b, SDLK_c, SDLK_d, SDLK_e, SDLK_f, SDLK_g, SDLK_h, SDLK_i,
 						SDLK_j, SDLK_k, SDLK_l, SDLK_m, SDLK_n, SDLK_o, SDLK_p, SDLK_q, SDLK_r,
 						SDLK_s, SDLK_t, SDLK_u, SDLK_v, SDLK_w, SDLK_x, SDLK_y, SDLK_z};
@@ -21,21 +23,6 @@ const SDL_KeyCode ACTION [] = {SDLK_DELETE, SDLK_KP_ENTER, SDLK_UP, SDLK_DOWN, S
 
 
 
-
-// Erreurs :
-
-// Les symboles en dessous des chiffres ne n'affiches pas !! 
-// line 139
-
-
-
-
-
-
-// rappel de compilation
-
-// Windows :   gcc src/main.c -o bin/main -I include -L lib -lmingw32 -lSDL2main -lSDL2 -lSDL2_ttf
-			// bin/main.exe
 
 // Fonctions 
 void SDL_ExitWithError(const char* message, ...);
@@ -58,7 +45,26 @@ int main(int argc, char* argv[]){
 	SDL_Color color_txt = { 25, 25, 25 };
 	SDL_Color color_bg = { 225, 225, 225 };
 
+	char* pathFile = NULL;
+	if ((pathFile = (char*)calloc(105, sizeof(char))) == NULL) {
+        exit(EXIT_FAILURE);
+    }
 
+	char* pathFont = "..\\fonts\\arial.ttf";
+
+	char* folder = "..\\files\\";
+	char file[50];
+	printf("entrez le nom du fichier à éditer\n");
+	printf("exemple : -> test.txt\n");
+	printf("-> ");
+	fgets(file, 50, stdin);
+	file[strcspn(file, "\n")] = '\0'; 
+
+	strcat(pathFile, folder);
+	strcat(pathFile, file);
+	// printf("%s\n", pathFile);
+
+	
 
 	//Lancement SDL
 	if(SDL_Init(SDL_INIT_VIDEO) != 0){ 	// renvoie 0 si tout va bien
@@ -92,14 +98,15 @@ int main(int argc, char* argv[]){
 
 	SDL_RenderPresent(renderer);
 
-	font = TTF_OpenFont("..\\fonts\\arial.ttf", 20);
+	font = TTF_OpenFont(pathFont, 20);
 
 	if(font == NULL){
+		free(pathFile);
 		TTF_CloseFont(font);
 		SDL_ExitWithError("Add font failed");
 	}
 
-	SDL_RWops *io = SDL_RWFromFile("..\\files\\test.txt", "w+");
+	SDL_RWops *io = SDL_RWFromFile(pathFile, "w+");
 	if (io == NULL) {
 		SDL_ExitWithError("File not found", io);
 	}
@@ -154,7 +161,7 @@ int main(int argc, char* argv[]){
 							break; // Sort de la boucle
 						}
 					}
-					SDL_Log("%d -> %c.", event.key.keysym.sym, event.key.keysym.sym);
+					// SDL_Log("%d -> %c.", event.key.keysym.sym, event.key.keysym.sym);
 					if(valideChar){
 						SDL_WriteCharInFile(io, &pressedChar);
 						SDL_Log("File updated");
@@ -174,8 +181,9 @@ int main(int argc, char* argv[]){
 	}
 
 	/*-------------------------------------------------------*/
+	free(pathFile);
 	SDL_RWclose(io);
-	//TTF_CloseFont(font);
+	TTF_CloseFont(font);
 	SDL_DestroyTexture(texture);
 	TTF_Quit();
 
@@ -200,7 +208,6 @@ void SDL_ExitWithError(const char* message, ...){
 		SDL_RWclose(io);
 	}
 	va_end(ap);
-
 	TTF_Quit();
 	SDL_Quit();
 	exit(EXIT_FAILURE);

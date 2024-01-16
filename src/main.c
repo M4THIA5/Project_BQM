@@ -20,6 +20,7 @@ const SDL_KeyCode SYMBOLS [] = {SDLK_EXCLAIM, SDLK_QUOTE, SDLK_QUOTEDBL, SDLK_HA
 						SDLK_SLASH, SDLK_KP_PERIOD, SDLK_KP_DIVIDE, SDLK_KP_MINUS, SDLK_KP_MULTIPLY, SDLK_KP_PLUS, 
 						SDLK_KP_EQUALS, SDLK_SPACE, SDLK_BACKSPACE, SDLK_TAB,};
 const SDL_KeyCode ACTION [] = {SDLK_DELETE, SDLK_KP_ENTER, SDLK_UP, SDLK_DOWN, SDLK_RIGHT, SDLK_LEFT};
+char list[100];
 
 
 
@@ -46,6 +47,25 @@ void SDL_WriteCharInFile(SDL_RWops* io,const char* character);
 
 void SDL_SelectCharAction(SDL_RWops* io,const char* action);
 
+void append(char *s, char c)
+{
+    int len = strlen(s);
+    s[len] = c;
+    s[len + 1] = '\0';
+}
+
+void pop(char *s)
+{
+    int len = strlen(s);
+    if (len > 0)
+    {
+        s[len - 1] = '\0';
+    }
+    else
+    {
+        printf("Cannot suppress : empty !");
+    }
+}
 
 int main(int argc, char* argv[]){
 
@@ -158,8 +178,23 @@ int main(int argc, char* argv[]){
 					}
 					SDL_Log("%d -> %c.", event.key.keysym.sym, event.key.keysym.sym);
 					if(valideChar){
+						//Liste
+						char voide[] = " ";
+						if (pressedChar == SDLK_BACKSPACE || pressedChar == SDLK_DELETE){
+							(strlen(list)>1)?pop(list):strcpy(list,voide);
+						}else{
+							append(list, pressedChar);
+							}
+						if(SDL_SetRenderDrawColor(renderer, 225, 225, 225, SDL_ALPHA_OPAQUE) != 0){
+							SDL_ExitWithError("Change color failed");
+						}
+
+						if(SDL_RenderFillRect(renderer, &background) != 0){
+							SDL_ExitWithError("Drawing background failed");
+						}
+						SDL_RenderPresent(renderer);
 						// affichage du caractère
-						SDL_Surface * gc = TTF_RenderText_Blended(font, &pressedChar, color_txt);
+						SDL_Surface * gc = TTF_RenderText_Blended(font, &list, color_txt);
 						if (gc == NULL) {
 							SDL_FreeSurface(gc);
 							TTF_CloseFont(font);
@@ -173,7 +208,6 @@ int main(int argc, char* argv[]){
 						}
 						//Ecrire les lettres cote à cote
 						SDL_QueryTexture(texture, NULL, NULL, 0, 0);
-						rect.x += rect.w;
 						rect.w = gc->w;
 						rect.h = gc->h;
 						SDL_RenderCopy(renderer, texture, NULL, &rect);

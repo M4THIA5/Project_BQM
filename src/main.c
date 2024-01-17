@@ -1,6 +1,7 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
 
@@ -24,14 +25,38 @@ const SDL_KeyCode ACTION[] = {SDLK_DELETE, SDLK_KP_ENTER, SDLK_UP, SDLK_DOWN, SD
 // Fonctions
 void SDL_ExitWithError(const char *message, ...);
 void SDL_WriteCharInFile(SDL_RWops *io, const char *character);
+void SDL_SelectCharAction(SDL_RWops* io,const char* action);
 
 int main(int argc, char *argv[])
 {
     SDL_Window *firstWindow = NULL;
     SDL_Renderer *renderer = NULL;
 
+    SDL_Surface* texte_surf = NULL;
+	SDL_Texture* texture = NULL;
+	SDL_Rect rect = { 0, 0, 0, 0 };
+
     TTF_Font *font = NULL;
+    SDL_Color color_txt = { 25, 25, 25 };
     SDL_Color color_bg = {225, 225, 225};
+    char* pathFile = NULL;
+	if ((pathFile = (char*)calloc(105, sizeof(char))) == NULL) {
+        exit(EXIT_FAILURE);
+    }
+
+	char* pathFont = "..\\fonts\\arial.ttf";
+
+	char* folder = "..\\files\\";
+	char file[50];
+	printf("entrez le nom du fichier à éditer\n");
+	printf("exemple : -> test.txt\n");
+	printf("-> ");
+	fgets(file, 50, stdin);
+	file[strcspn(file, "\n")] = '\0'; 
+
+	strcat(pathFile, folder);
+	strcat(pathFile, file);
+	// printf("%s\n", pathFile);
 
     // Lancement SDL
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
@@ -301,6 +326,11 @@ int main(int argc, char *argv[])
         SDL_RenderPresent(renderer);
         SDL_Delay(10);
     }
+    free(pathFile);
+	SDL_RWclose(io);
+	TTF_CloseFont(font);
+	SDL_DestroyTexture(texture);
+	TTF_Quit();
 
     SDL_RWclose(io);
     SDL_DestroyRenderer(renderer);
@@ -339,4 +369,13 @@ void SDL_WriteCharInFile(SDL_RWops *io, const char *character)
     {
         SDL_ExitWithError("string not written in file", io);
     }
+}
+
+void SDL_SelectCharAction(SDL_RWops* io,const char* action){
+	switch(*action){
+		// case ACTION[0]:
+			// fonction qui fait l'action voulu dans le fichier
+		default:
+			break;
+	}
 }

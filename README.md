@@ -7,5 +7,6 @@ bin/main.exe
 
 // Erreurs :
 
+//Les action comme ouvrir un fichier, sauvegarder un fichier... s'écrivent dans le fichier !
+
 // Les symboles en dessous des chiffres ne n'affiches pas !! 
-// line 139

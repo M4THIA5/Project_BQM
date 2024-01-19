@@ -31,8 +31,17 @@ void SDL_WriteCharInFile(SDL_RWops* io,const char* character);
 
 void SDL_SelectCharAction(SDL_RWops* io,const char* action);
 
+void append(char *s, char c);
+
+void pop(char *s);
+
 
 int main(int argc, char* argv[]){
+
+	char* list = NULL;
+	if ((list = (char*)calloc(1000, sizeof(char))) == NULL) {
+		exit(EXIT_FAILURE);
+	}
 
 	SDL_Window* firstWindow = NULL;
 	SDL_Renderer* renderer = NULL;
@@ -103,7 +112,7 @@ int main(int argc, char* argv[]){
 	if(font == NULL){
 		free(pathFile);
 		TTF_CloseFont(font);
-		SDL_ExitWithError("Add font failed");
+		SDL_ExitWithError("Failed to load font");
 	}
 
 	SDL_RWops *io = SDL_RWFromFile(pathFile, "w+");
@@ -111,8 +120,10 @@ int main(int argc, char* argv[]){
 		SDL_ExitWithError("File not found", io);
 	}
 
-	
-	SDL_bool run = SDL_TRUE;	// Struct booleenne True/False
+	int selectedOption = -1;
+    SDL_bool menuOpen = SDL_TRUE; // Afficher le menu principal au démarrage
+    SDL_bool subMenuOpen = SDL_FALSE; // Ne pas afficher le sous-menu au démarrage
+	SDL_bool run = SDL_TRUE;
 
 	//Boucle infini
 	while(run){
@@ -163,11 +174,126 @@ int main(int argc, char* argv[]){
 					}
 					// SDL_Log("%d -> %c.", event.key.keysym.sym, event.key.keysym.sym);
 					if(valideChar){
+						//Liste
+						char voide[] = " ";
+						if (pressedChar == SDLK_BACKSPACE || pressedChar == SDLK_DELETE){
+							(strlen(list)>1)?pop(list):strcpy(list,voide);
+						}else{
+							append(list, pressedChar);
+							}
+						if(SDL_SetRenderDrawColor(renderer, 225, 225, 225, SDL_ALPHA_OPAQUE) != 0){
+							SDL_ExitWithError("Change color failed");
+						}
+
+						if(SDL_RenderFillRect(renderer, &background) != 0){
+							SDL_ExitWithError("Drawing background failed");
+						}
+						SDL_RenderPresent(renderer);
+						// affichage du caractère
+						SDL_Surface * gc = TTF_RenderText_Blended(font, list, color_txt);
+						if (gc == NULL) {
+							SDL_FreeSurface(gc);
+							TTF_CloseFont(font);
+							SDL_ExitWithError("Creating surface failed");
+						}
+						texture = SDL_CreateTextureFromSurface(renderer, gc);
+						if (texture == NULL) {
+							SDL_FreeSurface(gc);
+							TTF_CloseFont(font);
+							SDL_ExitWithError("Creating texture failed");
+						}
+						//Ecrire les lettres cote à cote
+						SDL_QueryTexture(texture, NULL, NULL, 0, 0);
+						rect.w = gc->w;
+						rect.h = gc->h;
+						SDL_RenderCopy(renderer, texture, NULL, &rect);
+						SDL_RenderPresent(renderer);
+						
+						SDL_Delay(10);
+
+
+
 						SDL_WriteCharInFile(io, &pressedChar);
 						SDL_Log("File updated");
 					}
 
 					break;
+
+				case SDL_MOUSEBUTTONDOWN:
+					if (event.button.button == SDL_BUTTON_LEFT){
+						//----------------------------- Rajouts -----------------------------------------------
+						SDL_Rect rect = {10, 10, 150, 30};    // Menu principal
+						SDL_Rect subRect = {10, 40, 150, 120}; // Sous-menu (options)
+
+						// Vérifier si le clic est dans le menu principal
+						const SDL_Point pt = {event.motion.x, event.motion.y};
+						if (SDL_PointInRect(&pt, &rect)){
+							// Afficher ou masquer le sous-menu lors du clic sur le menu principal
+							subMenuOpen = !subMenuOpen;
+						}
+						else if (subMenuOpen && SDL_PointInRect(&pt, &subRect)){
+							// Gérer les clics dans le sous-menu
+							int optionClicked = (event.motion.y - 40) / 30 + 1; // Calculer l'option cliquée
+
+							switch (optionClicked){
+								case 1:
+									SDL_WriteCharInFile(io, "Nouveau selected!\n");
+									break;
+								case 2:
+									SDL_WriteCharInFile(io, "Ouvrir selected!\n");
+									break;
+								case 3:
+									SDL_WriteCharInFile(io, "Sauvegarder selected!\n");
+									break;
+								case 4:
+									SDL_WriteCharInFile(io, "Quitter selected!\n");
+									run = SDL_FALSE;
+									break;
+								default:
+									break;
+							}
+						}
+					}
+					break;
+
+            	case SDL_MOUSEMOTION: 
+
+                    if (menuOpen){
+						SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+						SDL_RenderFillRect(renderer, &(SDL_Rect){10, 10, 150, 30});
+
+						SDL_Color textColor2 = {0, 0, 0};
+						SDL_Surface *textSurface2 = TTF_RenderText_Solid(font, "Menu", textColor2);
+						SDL_Texture *textTexture2 = SDL_CreateTextureFromSurface(renderer, textSurface2);
+						SDL_Rect textRect3 = {15, 10, textSurface2->w, textSurface2->h};
+						SDL_RenderCopy(renderer, textTexture2, NULL, &textRect3);
+
+						if (subMenuOpen){
+							SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+							SDL_RenderFillRect(renderer, &(SDL_Rect){10, 40, 150, 120});
+
+							// Dessiner les options du sous-menu ici
+							// Vous pouvez ajuster les positions et les textes en conséquence
+							// Exemple basique avec "Option 1", "Option 2", etc.
+							SDL_Color textColor = {0, 0, 0};
+							for (int i = 1; i <= 4; ++i){
+								char optionText[20];
+								snprintf(optionText, sizeof(optionText), "Option %d", i);
+
+								SDL_Surface *textSurface = TTF_RenderText_Solid(font, optionText, textColor);
+								SDL_Texture *textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+								SDL_Rect textRect = {15, 40 + (i - 1) * 30, textSurface->w, textSurface->h};
+								SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+
+								SDL_FreeSurface(textSurface);
+								SDL_DestroyTexture(textTexture);
+							}
+						}
+
+						SDL_FreeSurface(textSurface2);
+						SDL_DestroyTexture(textTexture2);
+					}
+                	break;
 
 				//termine le programme la si fenêtre est fermé
 				case SDL_QUIT:
@@ -178,6 +304,64 @@ int main(int argc, char* argv[]){
 					break;
 			}
 		}
+//pas certin du bail
+/*---------------------------------------------------------------------------------*/
+
+		// Effacer le fond
+        SDL_SetRenderDrawColor(renderer, 225, 225, 225, SDL_ALPHA_OPAQUE);
+        SDL_RenderFillRect(renderer, &background);
+        
+        if (menuOpen){
+                // Dessiner le menu principal
+                    
+
+                    SDL_Color textColor = {0, 0, 0};
+                    SDL_Surface *textSurface = TTF_RenderText_Solid(font, "Menu", textColor);
+                    SDL_Texture *textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+                    SDL_Rect textRect = {15, 10, textSurface->w, textSurface->h};
+                    
+                    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+                    SDL_RenderFillRect(renderer, &(SDL_Rect){10, 10, 100, textSurface->h + 5});
+                    SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+            if ( subMenuOpen){
+                char** tab[4];
+                char* new ="Nouveau";
+                char * open = "Ouvrir";
+                char * save = "Sauvegarder";
+                char * quit ="Quitter";
+
+                tab[0]=&new;
+                tab[1]=&open;
+                tab[2]=&save;
+                tab[3]=&quit;
+
+                int position = textSurface->h + textRect.y;
+
+                for (int i = 0 ; i < 4 ; i++){
+                    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+                    SDL_Rect RCT = {10, position + 5, 100, textSurface->h + 5};
+                    SDL_RenderFillRect(renderer, &RCT);
+                    textSurface = TTF_RenderText_Solid(font, *tab[i], textColor);
+                    textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+                    position += textSurface->h + 5;
+                    
+                    SDL_RenderCopy(renderer, textTexture, NULL, &RCT);
+                }
+                        
+            }
+
+                    SDL_FreeSurface(textSurface);
+                    SDL_DestroyTexture(textTexture);
+
+
+                
+        }
+        
+
+        
+    
+        SDL_RenderPresent(renderer);
+        SDL_Delay(10);
 	}
 
 	/*-------------------------------------------------------*/
@@ -227,4 +411,24 @@ void SDL_SelectCharAction(SDL_RWops* io,const char* action){
 		default:
 			break;
 	}
+}
+
+void append(char *s, char c)
+{
+    int len = strlen(s);
+    s[len] = c;
+    s[len + 1] = '\0';
+}
+
+void pop(char *s)
+{
+    int len = strlen(s);
+    if (len > 0)
+    {
+        s[len - 1] = '\0';
+    }
+    else
+    {
+        printf("Cannot suppress : empty !");
+    }
 }

@@ -237,16 +237,16 @@ int main(int argc, char* argv[]){
 
 							switch (optionClicked){
 								case 1:
-									SDL_WriteCharInFile(io, "Nouveau selected!\n");
+									SDL_Log("Nouveau selected!\n");
 									break;
 								case 2:
-									SDL_WriteCharInFile(io, "Ouvrir selected!\n");
+									SDL_Log("Ouvrir selected!\n");
 									break;
 								case 3:
-									SDL_WriteCharInFile(io, "Sauvegarder selected!\n");
+									SDL_Log("Sauvegarder selected!\n");
 									break;
 								case 4:
-									SDL_WriteCharInFile(io, "Quitter selected!\n");
+									SDL_Log("Quitter selected!\n");
 									run = SDL_FALSE;
 									break;
 								default:

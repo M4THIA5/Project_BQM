@@ -34,6 +34,18 @@ void SDL_SelectCharAction(SDL_RWops* io,const char* action);
 void append(char *s, char c);
 
 void pop(char *s);
+void drawTextEntry(SDL_Renderer* renderer, TTF_Font* font, const char* text, SDL_Rect* rect, SDL_Color textColor) {
+    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+    SDL_RenderFillRect(renderer, rect);
+
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, text, textColor);
+    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+    SDL_Rect textRect = { rect->x + 5, rect->y + 5, textSurface->w, textSurface->h };
+    SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+
+    SDL_FreeSurface(textSurface);
+    SDL_DestroyTexture(textTexture);
+}
 
 
 int main(int argc, char* argv[]){
@@ -45,7 +57,7 @@ int main(int argc, char* argv[]){
 
 	SDL_Window* firstWindow = NULL;
 	SDL_Renderer* renderer = NULL;
-
+    SDL_Rect entryRect = { 170, 10, 900, 650 }; // Rectangle à droite du menu principal
 	SDL_Surface* texte_surf = NULL;
 	SDL_Texture* texture = NULL;
 	SDL_Rect rect = { 0, 0, 0, 0 }; 	// position.x , position.y , largeur , hauteur
@@ -288,6 +300,8 @@ int main(int argc, char* argv[]){
 								SDL_FreeSurface(textSurface);
 								SDL_DestroyTexture(textTexture);
 							}
+                            drawTextEntry(renderer, font, "Votre texte ici", &entryRect, textColor);
+                            
 						}
 
 						SDL_FreeSurface(textSurface2);
@@ -346,12 +360,15 @@ int main(int argc, char* argv[]){
                     position += textSurface->h + 5;
                     
                     SDL_RenderCopy(renderer, textTexture, NULL, &RCT);
+                    SDL_FreeSurface(textSurface);
+                    SDL_DestroyTexture(textTexture);
                 }
+                drawTextEntry(renderer, font, "Votre texte ici", &entryRect, textColor);
                         
             }
 
-                    SDL_FreeSurface(textSurface);
-                    SDL_DestroyTexture(textTexture);
+                    
+                    
 
 
                 

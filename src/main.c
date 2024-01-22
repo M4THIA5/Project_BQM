@@ -136,7 +136,10 @@ int main(int argc, char* argv[]){
     SDL_bool menuOpen = SDL_TRUE; // Afficher le menu principal au démarrage
     SDL_bool subMenuOpen = SDL_FALSE; // Ne pas afficher le sous-menu au démarrage
 	SDL_bool run = SDL_TRUE;
+	SDL_bool editingWindowOpen = SDL_FALSE;
 
+
+	
 	//Boucle infini
 	while(run){
 		SDL_Event event;
@@ -144,13 +147,13 @@ int main(int argc, char* argv[]){
 		while(SDL_PollEvent(&event)){
 			switch(event.type){
 
-				case SDL_KEYDOWN:
+				case SDL_KEYDOWN: 
 					char pressedChar;
 					SDL_bool valideChar = SDL_FALSE;
 					for(int i = 0; i < sizeof(ALPHABET)/4 ; i++){	// = 26 soit le nb de lettres
 						if(event.key.keysym.sym == ALPHABET[i]){
-							pressedChar = event.key.keysym.mod & KMOD_SHIFT ? 
-                                               toupper(event.key.keysym.sym) : event.key.keysym.sym;
+							pressedChar = event.key.keysym.mod & KMOD_SHIFT ?  
+                            toupper(event.key.keysym.sym) : event.key.keysym.sym;
 							valideChar = SDL_TRUE;
 							break; // Sort de la boucle 
 						}
@@ -165,6 +168,7 @@ int main(int argc, char* argv[]){
 							}
 						}
 					}
+					
 						
 					if( valideChar == SDL_FALSE){
 						for(int i=0; i<sizeof(SYMBOLS)/4; i++){
@@ -185,49 +189,140 @@ int main(int argc, char* argv[]){
 						}
 					}
 					// SDL_Log("%d -> %c.", event.key.keysym.sym, event.key.keysym.sym);
-					if(valideChar){
-						//Liste
-						char voide[] = " ";
-						if (pressedChar == SDLK_BACKSPACE || pressedChar == SDLK_DELETE){
-							(strlen(list)>1)?pop(list):strcpy(list,voide);
-						}else{
-							append(list, pressedChar);
-							}
-						if(SDL_SetRenderDrawColor(renderer, 225, 225, 225, SDL_ALPHA_OPAQUE) != 0){
-							SDL_ExitWithError("Change color failed");
-						}
+					
+					if (editingWindowOpen)
+					{
+						switch (event.key.keysym.sym)
+						{
+							case SDLK_RETURN:
+								// Ajouter une nouvelle ligne à votre texte dans la fenêtre d'édition
+								append(list, '\n');
+								break;
 
-						if(SDL_RenderFillRect(renderer, &background) != 0){
-							SDL_ExitWithError("Drawing background failed");
-						}
-						SDL_RenderPresent(renderer);
-						// affichage du caractère
-						SDL_Surface * gc = TTF_RenderText_Blended(font, list, color_txt);
-						if (gc == NULL) {
-							SDL_FreeSurface(gc);
-							TTF_CloseFont(font);
-							SDL_ExitWithError("Creating surface failed");
-						}
-						texture = SDL_CreateTextureFromSurface(renderer, gc);
-						if (texture == NULL) {
-							SDL_FreeSurface(gc);
-							TTF_CloseFont(font);
-							SDL_ExitWithError("Creating texture failed");
-						}
-						//Ecrire les lettres cote à cote
-						SDL_QueryTexture(texture, NULL, NULL, 0, 0);
-						rect.w = gc->w;
-						rect.h = gc->h;
-						SDL_RenderCopy(renderer, texture, NULL, &rect);
-						SDL_RenderPresent(renderer);
-						
-						SDL_Delay(10);
+							case SDLK_BACKSPACE:
+								// Supprimer le dernier caractère de votre texte dans la fenêtre d'édition
+								pop(list);
+								break;
 
+							case SDLK_ESCAPE:
+								// Fermer la fenêtre d'édition
+								editingWindowOpen = SDL_FALSE;
+								break;
 
-
-						SDL_WriteCharInFile(io, &pressedChar);
-						SDL_Log("File updated");
+							default:
+								// Ajouter le caractère au texte dans la fenêtre d'édition
+								char pressedChar = event.key.keysym.mod & KMOD_SHIFT
+													? toupper(event.key.keysym.sym)
+													: event.key.keysym.sym;
+								append(list, pressedChar);
+								break;
+						}
 					}
+					else
+					{
+						// Gérer les touches du clavier dans la fenêtre principale
+						// ... (votre code initial)
+						char pressedChar;
+						SDL_bool valideChar = SDL_FALSE;
+
+						for (int i = 0; i < sizeof(ALPHABET) / sizeof(SDL_Keycode); i++)
+						{
+							if (event.key.keysym.sym == ALPHABET[i])
+							{
+								pressedChar = event.key.keysym.mod & KMOD_SHIFT ? toupper(event.key.keysym.sym) : event.key.keysym.sym;
+								valideChar = SDL_TRUE;
+								break; // Sort de la boucle
+							}
+						}
+
+						if (!(event.key.keysym.mod & KMOD_SHIFT) & valideChar == SDL_FALSE)
+						{
+							for (int i = 0; i < sizeof(ZERO_TO_NINE) / sizeof(SDL_Keycode); i++)
+							{
+								if (event.key.keysym.sym == ZERO_TO_NINE[i])
+								{
+									pressedChar = event.key.keysym.sym;
+									valideChar = SDL_TRUE;
+									break; // Sort de la boucle
+								}
+							}
+						}
+
+						if (valideChar == SDL_FALSE)
+						{
+							for (int i = 0; i < sizeof(SYMBOLS) / sizeof(SDL_Keycode); i++)
+							{
+								if (event.key.keysym.sym == SYMBOLS[i])
+								{
+									pressedChar = event.key.keysym.sym;
+									valideChar = SDL_TRUE;
+									break; // Sort de la boucle
+								}
+							}
+						}
+
+						for (int i = 0; i < sizeof(ACTION) / sizeof(SDL_Keycode); i++)
+						{
+							if (event.key.keysym.sym == ACTION[i])
+							{
+								pressedChar = event.key.keysym.sym;
+								// pas de valideChar ici
+								break; // Sort de la boucle
+							}
+						}
+
+						// SDL_Log("%d -> %c.", event.key.keysym.sym, event.key.keysym.sym);
+						if (valideChar)
+						{
+							// Liste
+							char voide[] = " ";
+							if (pressedChar == SDLK_BACKSPACE || pressedChar == SDLK_DELETE)
+							{
+								(strlen(list) > 1) ? pop(list) : strcpy(list, voide);
+							}
+							else
+							{
+								append(list, pressedChar);
+							}
+							if (SDL_SetRenderDrawColor(renderer, 225, 225, 225, SDL_ALPHA_OPAQUE) != 0)
+							{
+								SDL_ExitWithError("Change color failed");
+							}
+
+							if (SDL_RenderFillRect(renderer, &background) != 0)
+							{
+								SDL_ExitWithError("Drawing background failed");
+							}
+							SDL_RenderPresent(renderer);
+							// affichage du caractère
+							SDL_Surface *gc = TTF_RenderText_Blended(font, list, color_txt);
+							if (gc == NULL)
+							{
+								SDL_FreeSurface(gc);
+								TTF_CloseFont(font);
+								SDL_ExitWithError("Creating surface failed");
+							}
+							texture = SDL_CreateTextureFromSurface(renderer, gc);
+							if (texture == NULL)
+							{
+								SDL_FreeSurface(gc);
+								TTF_CloseFont(font);
+								SDL_ExitWithError("Creating texture failed");
+							}
+							// Ecrire les lettres cote à cote
+							SDL_QueryTexture(texture, NULL, NULL, 0, 0);
+							rect.w = gc->w;
+							rect.h = gc->h;
+							SDL_RenderCopy(renderer, texture, NULL, &rect);
+							SDL_RenderPresent(renderer);
+
+							SDL_Delay(10);
+
+							SDL_WriteCharInFile(io, &pressedChar);
+							SDL_Log("File updated");
+						}
+					}
+    
 
 					break;
 
@@ -255,7 +350,7 @@ int main(int argc, char* argv[]){
 									SDL_WriteCharInFile(io, "Ouvrir selected!\n");
 									break;
 								case 3:
-									SDL_WriteCharInFile(io, "Sauvegarder selected!\n");
+									SDL_WriteCharInFile(io, "Dark Mode selected!\n");
 									break;
 								case 4:
 									SDL_WriteCharInFile(io, "Quitter selected!\n");
@@ -279,6 +374,7 @@ int main(int argc, char* argv[]){
 						SDL_Texture *textTexture2 = SDL_CreateTextureFromSurface(renderer, textSurface2);
 						SDL_Rect textRect3 = {15, 10, textSurface2->w, textSurface2->h};
 						SDL_RenderCopy(renderer, textTexture2, NULL, &textRect3);
+						drawTextEntry(renderer, font, "Votre texte ici", &entryRect, textColor2);
 
 						if (subMenuOpen){
 							SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
@@ -300,7 +396,7 @@ int main(int argc, char* argv[]){
 								SDL_FreeSurface(textSurface);
 								SDL_DestroyTexture(textTexture);
 							}
-                            drawTextEntry(renderer, font, "Votre texte ici", &entryRect, textColor);
+                            
                             
 						}
 
@@ -318,9 +414,9 @@ int main(int argc, char* argv[]){
 					break;
 			}
 		}
-//pas certin du bail
-/*---------------------------------------------------------------------------------*/
 
+/*---------------------------------------------------------------------------------*/
+		
 		// Effacer le fond
         SDL_SetRenderDrawColor(renderer, 225, 225, 225, SDL_ALPHA_OPAQUE);
         SDL_RenderFillRect(renderer, &background);
@@ -337,16 +433,17 @@ int main(int argc, char* argv[]){
                     SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
                     SDL_RenderFillRect(renderer, &(SDL_Rect){10, 10, 100, textSurface->h + 5});
                     SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+					drawTextEntry(renderer, font, "Votre texte ici", &entryRect, textColor);
             if ( subMenuOpen){
                 char** tab[4];
                 char* new ="Nouveau";
                 char * open = "Ouvrir";
-                char * save = "Sauvegarder";
+                char * dark = "Dark Mode";
                 char * quit ="Quitter";
 
                 tab[0]=&new;
                 tab[1]=&open;
-                tab[2]=&save;
+                tab[2]=&dark;
                 tab[3]=&quit;
 
                 int position = textSurface->h + textRect.y;
@@ -363,7 +460,7 @@ int main(int argc, char* argv[]){
                     SDL_FreeSurface(textSurface);
                     SDL_DestroyTexture(textTexture);
                 }
-                drawTextEntry(renderer, font, "Votre texte ici", &entryRect, textColor);
+                
                         
             }
 

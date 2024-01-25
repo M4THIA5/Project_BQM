@@ -35,6 +35,7 @@ void drawTextEntry(SDL_Renderer *renderer, TTF_Font *font, const char *text, SDL
         SDL_Surface *textSurface = TTF_RenderText_Solid(font, text, (SDL_Color){255, 255, 255, 255}); 
         textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
         SDL_FreeSurface(textSurface);
+        
     }
     else
     {
@@ -42,10 +43,11 @@ void drawTextEntry(SDL_Renderer *renderer, TTF_Font *font, const char *text, SDL
         SDL_Surface *textSurface = TTF_RenderText_Solid(font, text, textColor);
         textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
         SDL_FreeSurface(textSurface);
+        
     }
 
     SDL_RenderFillRect(renderer, rect);
-    SDL_Rect textRect = {rect->x + 5, rect->y + 5, 150, 50}; 
+    SDL_Rect textRect = {rect->x + 5, rect->y + 5, 150, 20}; 
 
     if (textTexture != NULL)
     {
@@ -74,7 +76,8 @@ void SDL_ExitWithError(const char* message, ...){
 
 void SDL_WriteCharInFile(SDL_RWops* io,const char* character){
 	size_t len = strlen(character);
-    if (SDL_RWwrite(io, character, 1, len) != len) {
+    printf("len = %d\n", len);
+    if (SDL_RWwrite(io, character, 1, 1) != 1) {
         SDL_ExitWithError("string not written in file", io);
     }
 }
@@ -142,7 +145,7 @@ int main(int argc, char *argv[])
     SDL_Rect entryRect = {170, 10, 900, 650}; // Rectangle à droite du menu principal
     SDL_Surface *texte_surf = NULL;
     SDL_Texture *texture = NULL;
-    SDL_Rect rect = {0, 0, 0, 0}; // position.x , position.y , largeur , hauteur
+    SDL_Rect rect = {170, 35, 0, 0}; // position.x , position.y , largeur , hauteur
 
     TTF_Font *font = NULL;
     SDL_Color color_txt = {25, 25, 25};
@@ -218,10 +221,12 @@ int main(int argc, char *argv[])
         SDL_ExitWithError("Failed to load font");
     }
 
-    SDL_RWops *io = SDL_RWFromFile(pathFile, "w+");
-    if (io == NULL)
-    {
-        SDL_ExitWithError("File not found", io);
+    SDL_RWops* io = SDL_RWFromFile(pathFile, "a");  // Utiliser "a" pour ajouter à la suite
+    if (io == NULL) {
+        io = SDL_RWFromFile(pathFile, "w");  // Si le fichier n'existe pas, le créer avec "w"
+        if (io == NULL) {
+            SDL_ExitWithError("SDL_RWFromFile failed: %s", SDL_GetError());
+        }
     }
 
     int selectedOption = -1;
@@ -399,9 +404,11 @@ int main(int argc, char *argv[])
                     {
                         if (event.key.keysym.sym == ALPHABET[i])
                         {
-                            pressedChar = event.key.keysym.mod & KMOD_SHIFT
-                                              ? toupper(event.key.keysym.sym)
-                                              : event.key.keysym.sym;
+                            pressedChar = event.key.keysym.mod & KMOD_SHIFT 
+                                              ? toupper(event.key.keysym.sym) 
+                                              : event.key.keysym.sym; 
+
+
                             valideChar = SDL_TRUE;
                             break;
                         }
@@ -442,7 +449,8 @@ int main(int argc, char *argv[])
                             break;
                         }
                     }
-					SDL_Log("%d -> %c.", event.key.keysym.sym, event.key.keysym.sym);
+										SDL_Log("%d -> %c.", event.key.keysym.sym, event.key.keysym.sym);
+
                     if(event.key.keysym.sym == SDLK_LEFT && cpt_left < strlen(list)){
                             cpt_left++;
                         }if(event.key.keysym.sym == SDLK_RIGHT && cpt_left > 0){

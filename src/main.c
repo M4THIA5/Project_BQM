@@ -20,6 +20,7 @@ const SDL_KeyCode SYMBOLS[] = {SDLK_EXCLAIM, SDLK_QUOTE, SDLK_QUOTEDBL, SDLK_HAS
                                SDLK_SLASH, SDLK_KP_PERIOD, SDLK_KP_DIVIDE, SDLK_KP_MINUS, SDLK_KP_MULTIPLY, SDLK_KP_PLUS,
                                SDLK_KP_EQUALS, SDLK_SPACE, SDLK_BACKSPACE, SDLK_TAB};
 const SDL_KeyCode ACTION[] = {SDLK_DELETE, SDLK_KP_ENTER, SDLK_UP, SDLK_DOWN, SDLK_RIGHT, SDLK_LEFT};
+int cpt_left = 0;
 
 void append(char *s, char c);
 void pop(char *s);
@@ -100,6 +101,27 @@ void pop(char *s)
     if (len > 0)
     {
         s[len - 1] = '\0';
+    }
+    else
+    {
+        printf("Cannot suppress : empty !");
+    }
+}
+void append2(char *s, char c, int i)
+{
+    int len = strlen(s);
+    s[len-i] = c;
+    cpt_left--;
+}
+void pop2(char *s, int i)
+{
+    int len = strlen(s);
+    if (len > 0)
+    {
+        for (i;i<len;i++)
+        {
+        s[len-i] = s[len - i +1];
+        }
     }
     else
     {
@@ -264,6 +286,7 @@ int main(int argc, char *argv[])
 												
 				}
             }
+			// pour afficher le texte dans la fenêtre d'édition
 			if (strlen(list)){
                 SDL_Surface *gc = TTF_RenderText_Blended(font, list, color_txt);
                         if (gc == NULL)
@@ -420,17 +443,26 @@ int main(int argc, char *argv[])
                         }
                     }
 					SDL_Log("%d -> %c.", event.key.keysym.sym, event.key.keysym.sym);
+                    if(event.key.keysym.sym == SDLK_LEFT && cpt_left < strlen(list)){
+                            cpt_left++;
+                        }if(event.key.keysym.sym == SDLK_RIGHT && cpt_left > 0){
+                                cpt_left--;
+                            }
+                            printf("%d %d\n",cpt_left, strlen(list));
 
                     if (valideChar)
                     {
                         char voide[] = " ";
-                        if (pressedChar == SDLK_BACKSPACE || pressedChar == SDLK_DELETE)
-                        {
-                            (strlen(list) > 1) ? pop(list) : strcpy(list, voide);
-                        }
-                        else
-                        {
-                            append(list, pressedChar);
+                        if (pressedChar == SDLK_BACKSPACE || pressedChar == SDLK_DELETE){
+                            if((strlen(list))>0){
+                                if(cpt_left == 0){
+                                    pop(list);
+                                }/*else{
+                                    pop2(list,cpt_left);
+                                }*/
+                            }
+                        }else{
+                            (cpt_left == 0)?append(list,pressedChar):append2(list,pressedChar,cpt_left);                
                         }
                         if (SDL_SetRenderDrawColor(renderer, 225, 225, 225, SDL_ALPHA_OPAQUE) != 0)
                         {
